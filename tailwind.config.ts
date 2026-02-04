@@ -21,6 +21,10 @@ const config: Config = {
         "pixel-sm": "2px 2px 0px 0px rgba(0, 0, 0, 0.15)",
         "pixel-lg": "6px 6px 0px 0px rgba(0, 0, 0, 0.25)",
       },
+      fontFamily: {
+        "pixel": ["'Press Start 2P'", "cursive"],
+        "pixel-body": ["'VT323'", "monospace"],
+      },
     },
   },
   plugins: [],

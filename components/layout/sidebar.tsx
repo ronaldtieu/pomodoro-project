@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, List, Timer, BarChart3, LogOut } from 'lucide-react';
+import { Home, List, Timer, BarChart3, LogOut, CheckSquare } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
@@ -18,8 +18,7 @@ export const Sidebar: React.FC = () => {
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: Home },
-    { href: '/dashboard/tasks', label: 'Tasks', icon: List },
-    { href: '/dashboard/timer', label: 'Timer', icon: Timer },
+    { href: '/dashboard/todos', label: 'Todos', icon: CheckSquare },
     { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
   ];
 

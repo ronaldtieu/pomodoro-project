@@ -38,3 +38,10 @@ next-env.d.ts
 
 # claude
 .claude/
+
+# documentation (keep README.md)
+IMPLEMENTATION_SUMMARY.md
+SETUP.md
+QUICK_START.md
+SUPABASE_SETUP.md
+
