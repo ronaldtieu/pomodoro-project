@@ -29,7 +29,7 @@ export const PomodoroTimer: React.FC = () => {
 
   const { tasks } = useTasks();
   const [showBreakPrompt, setShowBreakPrompt] = useState(false);
-  const [nextSessionType, setNextSessionType] = useState<SessionType>('short_break');
+  const [nextSessionType, setNextSessionType] = useState<'short_break' | 'long_break'>('short_break');
 
   // Get user settings
   const [sessionsUntilLongBreak, setSessionsUntilLongBreak] = useState(4);
@@ -52,7 +52,7 @@ export const PomodoroTimer: React.FC = () => {
 
   const handleSessionComplete = () => {
     if (currentSession === 'work') {
-      const nextBreak: SessionType =
+      const nextBreak: 'short_break' | 'long_break' =
         (completedSessions + 1) % sessionsUntilLongBreak === 0
           ? 'long_break'
           : 'short_break';
@@ -61,6 +61,7 @@ export const PomodoroTimer: React.FC = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (timeRemaining === 0 && isActive) {
       handleSessionComplete();

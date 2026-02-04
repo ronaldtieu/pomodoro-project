@@ -1,4 +1,3 @@
-import { Database } from '@/types/supabase';
 import { Task, PomodoroSession, UserSettings } from '@/types';
 
 export const queries = {

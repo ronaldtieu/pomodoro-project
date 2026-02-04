@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Coffee, Skip, X } from 'lucide-react';
+import { Coffee, Forward, X } from 'lucide-react';
 import { PixelButton } from '@/components/ui/pixel-button';
 import { PixelCard } from '@/components/ui/pixel-card';
 
@@ -59,7 +59,7 @@ export const BreakPrompt: React.FC<BreakPromptProps> = ({
               className="w-full text-lg py-3"
             >
               <div className="flex items-center justify-center gap-2">
-                <Skip size={20} />
+                <Forward size={20} />
                 Skip Break
               </div>
             </PixelButton>

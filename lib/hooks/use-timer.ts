@@ -26,6 +26,7 @@ export const useTimer = () => {
   const sessionStartRef = useRef<Date | null>(null);
   const currentSessionIdRef = useRef<string | null>(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (isActive && !isPaused && timeRemaining > 0) {
       intervalRef.current = setInterval(() => {
