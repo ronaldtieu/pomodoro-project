@@ -44,7 +44,7 @@ export default function LandingPage() {
             <div className="w-12 h-12 bg-primary/10 border-2 border-primary rounded-lg flex items-center justify-center mb-4">
               <Timer className="text-primary" size={24} />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Pomodoro Timer</h3>
+            <h3 className="text-base font-bold text-gray-900 mb-2">Pomodoro Timer</h3>
             <p className="text-gray-600">
               Customizable work/break intervals with focus tracking
             </p>
@@ -54,7 +54,7 @@ export default function LandingPage() {
             <div className="w-12 h-12 bg-secondary/10 border-2 border-secondary rounded-lg flex items-center justify-center mb-4">
               <Target className="text-secondary" size={24} />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Task Management</h3>
+            <h3 className="text-base font-bold text-gray-900 mb-2">Task Management</h3>
             <p className="text-gray-600">
               Create and organize tasks with pomodoro tracking
             </p>
@@ -64,7 +64,7 @@ export default function LandingPage() {
             <div className="w-12 h-12 bg-accent/10 border-2 border-accent rounded-lg flex items-center justify-center mb-4">
               <BarChart3 className="text-accent" size={24} />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Analytics</h3>
+            <h3 className="text-base font-bold text-gray-900 mb-2">Analytics</h3>
             <p className="text-gray-600">
               Track your productivity and break compliance
             </p>
@@ -74,7 +74,7 @@ export default function LandingPage() {
             <div className="w-12 h-12 bg-success/10 border-2 border-success rounded-lg flex items-center justify-center mb-4">
               <CheckCircle className="text-success" size={24} />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Break Tracking</h3>
+            <h3 className="text-base font-bold text-gray-900 mb-2">Break Tracking</h3>
             <p className="text-gray-600">
               Monitor and improve your break habits
             </p>

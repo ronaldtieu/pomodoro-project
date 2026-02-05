@@ -1,20 +1,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Calendar, Tag, MoreHorizontal } from 'lucide-react';
+import { Plus, Calendar } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { TodoItem } from '@/types';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { TodoModal } from './todo-modal';
 
 export const NotionTodoList: React.FC = () => {
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editField, setEditField] = useState<string>('');
-  const [newValue, setNewValue] = useState('');
-  const [showNewForm, setShowNewForm] = useState(false);
-  const [newTodoTitle, setNewTodoTitle] = useState('');
+  const [selectedTodo, setSelectedTodo] = useState<TodoItem | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -40,9 +39,7 @@ export const NotionTodoList: React.FC = () => {
     }
   };
 
-  const createTodo = async () => {
-    if (!newTodoTitle.trim()) return;
-
+  const createTodo = async (todoData: Partial<TodoItem>) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -51,9 +48,11 @@ export const NotionTodoList: React.FC = () => {
         .from('todos')
         .insert([{
           user_id: user.id,
-          title: newTodoTitle.trim(),
-          status: 'not_started',
-          priority: 'medium',
+          title: todoData.title?.trim() || '',
+          description: todoData.description || null,
+          status: todoData.status || 'not_started',
+          priority: todoData.priority || 'medium',
+          due_date: todoData.due_date || null,
         }])
         .select()
         .single();
@@ -61,19 +60,20 @@ export const NotionTodoList: React.FC = () => {
       if (error) throw error;
       if (data) {
         setTodos([data, ...todos]);
-        setNewTodoTitle('');
-        setShowNewForm(false);
+        setIsCreating(false);
+        setShowModal(false);
       }
     } catch (error) {
       console.error('Error creating todo:', error);
+      throw error;
     }
   };
 
-  const updateTodo = async (id: string, field: string, value: any) => {
+  const updateTodo = async (id: string, updates: Partial<TodoItem>) => {
     try {
       const { data, error } = await supabase
         .from('todos')
-        .update({ [field]: value, completed_at: field === 'status' && value === 'done' ? new Date().toISOString() : null })
+        .update({ ...updates, completed_at: updates.status === 'done' ? new Date().toISOString() : null })
         .eq('id', id)
         .select()
         .single();
@@ -81,9 +81,12 @@ export const NotionTodoList: React.FC = () => {
       if (error) throw error;
       if (data) {
         setTodos(todos.map(todo => todo.id === id ? data : todo));
+        setSelectedTodo(null);
+        setShowModal(false);
       }
     } catch (error) {
       console.error('Error updating todo:', error);
+      throw error;
     }
   };
 
@@ -96,39 +99,24 @@ export const NotionTodoList: React.FC = () => {
 
       if (error) throw error;
       setTodos(todos.filter(todo => todo.id !== id));
+      setSelectedTodo(null);
+      setShowModal(false);
     } catch (error) {
       console.error('Error deleting todo:', error);
+      throw error;
     }
   };
 
-  const startEdit = (id: string, field: string, value: any) => {
-    setEditingId(id);
-    setEditField(field);
-    setNewValue(String(value));
+  const handleRowClick = (todo: TodoItem) => {
+    setSelectedTodo(todo);
+    setShowModal(true);
+    setIsCreating(false);
   };
 
-  const saveEdit = () => {
-    if (editingId && editField) {
-      updateTodo(editingId, editField, newValue);
-      setEditingId(null);
-      setEditField('');
-      setNewValue('');
-    }
-  };
-
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditField('');
-    setNewValue('');
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      saveEdit();
-    } else if (e.key === 'Escape') {
-      cancelEdit();
-    }
+  const handleNewClick = () => {
+    setSelectedTodo(null);
+    setShowModal(true);
+    setIsCreating(true);
   };
 
   const statusColors = {
@@ -159,196 +147,101 @@ export const NotionTodoList: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">All Todos</h2>
-        <button
-          onClick={() => setShowNewForm(!showNewForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:brightness-110 transition-all font-pixel text-sm"
-        >
-          <Plus size={16} />
-          New
-        </button>
-      </div>
-
-      {/* New Todo Form */}
-      {showNewForm && (
-        <div className="border-2 border-primary rounded-lg p-4 bg-gray-50">
-          <input
-            type="text"
-            value={newTodoTitle}
-            onChange={(e) => setNewTodoTitle(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                createTodo();
-              } else if (e.key === 'Escape') {
-                setShowNewForm(false);
-                setNewTodoTitle('');
-              }
-            }}
-            placeholder="Todo title..."
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-            autoFocus
-          />
-          <div className="flex gap-2 mt-2">
-            <button
-              onClick={createTodo}
-              className="px-4 py-2 bg-primary text-white rounded hover:brightness-110 text-sm font-pixel"
-            >
-              Add Todo
-            </button>
-            <button
-              onClick={() => {
-                setShowNewForm(false);
-                setNewTodoTitle('');
-              }}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm font-pixel"
-            >
-              Cancel
-            </button>
-          </div>
+    <>
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900">All Todos</h2>
+          <button
+            onClick={handleNewClick}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:brightness-110 transition-all font-pixel text-sm"
+          >
+            <Plus size={16} />
+            New
+          </button>
         </div>
-      )}
 
-      {/* Table Header */}
-      <div className="grid grid-cols-12 gap-4 px-4 py-2 border-b-2 border-gray-300 text-xs font-semibold text-gray-600 uppercase tracking-wide">
-        <div className="col-span-4">Title</div>
-        <div className="col-span-2">Status</div>
-        <div className="col-span-2">Priority</div>
-        <div className="col-span-2">Due Date</div>
-        <div className="col-span-2">Actions</div>
-      </div>
+        {/* Table Header */}
+        <div className="grid grid-cols-12 gap-4 px-4 py-2 border-b-2 border-gray-300 text-xs font-semibold text-gray-600 uppercase tracking-wide">
+          <div className="col-span-5">Title</div>
+          <div className="col-span-2">Status</div>
+          <div className="col-span-2">Priority</div>
+          <div className="col-span-3">Due Date</div>
+        </div>
 
-      {/* Todo Items */}
-      <div className="space-y-1">
-        {todos.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <p className="text-lg mb-2">No todos yet</p>
-            <p className="text-sm">Click "New" to create your first todo</p>
-          </div>
-        ) : (
-          todos.map((todo) => (
-            <div
-              key={todo.id}
-              className="grid grid-cols-12 gap-4 px-4 py-3 border border-gray-200 rounded hover:bg-gray-50 transition-colors group"
-            >
-              {/* Title */}
-              <div className="col-span-4 flex items-center min-w-0">
-                {editingId === todo.id && editField === 'title' ? (
-                  <input
-                    type="text"
-                    value={newValue}
-                    onChange={(e) => setNewValue(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    onBlur={saveEdit}
-                    className="w-full px-2 py-1 border border-primary rounded focus:outline-none"
-                    autoFocus
-                  />
-                ) : (
+        {/* Todo Items */}
+        <div className="space-y-1">
+          {todos.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <p className="text-lg mb-2">No todos yet</p>
+              <p className="text-sm">Click &quot;New&quot; to create your first todo</p>
+            </div>
+          ) : (
+            todos.map((todo) => (
+              <div
+                key={todo.id}
+                onClick={() => handleRowClick(todo)}
+                className="grid grid-cols-12 gap-4 px-4 py-3 border border-gray-200 rounded hover:bg-gray-50 hover:ring-2 hover:ring-primary transition-all cursor-pointer group"
+              >
+                {/* Title */}
+                <div className="col-span-5 flex items-center min-w-0">
                   <div
-                    onClick={() => startEdit(todo.id, 'title', todo.title)}
                     className={cn(
-                      "truncate cursor-text hover:bg-gray-100 px-2 py-1 rounded -mx-2",
+                      "truncate font-medium",
                       todo.status === 'done' && 'line-through text-gray-400'
                     )}
                   >
                     {todo.title}
                   </div>
-                )}
-              </div>
+                </div>
 
-              {/* Status */}
-              <div className="col-span-2 flex items-center">
-                {editingId === todo.id && editField === 'status' ? (
-                  <select
-                    value={newValue}
-                    onChange={(e) => setNewValue(e.target.value)}
-                    onBlur={saveEdit}
-                    className="w-full px-2 py-1 border border-primary rounded text-sm"
-                    autoFocus
-                  >
-                    <option value="not_started">Not Started</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="done">Done</option>
-                  </select>
-                ) : (
-                  <div
-                    onClick={() => startEdit(todo.id, 'status', todo.status)}
-                    className={cn(
-                      "px-3 py-1 rounded-full text-xs font-semibold cursor-pointer hover:opacity-80 transition-opacity",
-                      statusColors[todo.status]
-                    )}
-                  >
+                {/* Status */}
+                <div className="col-span-2 flex items-center">
+                  <div className={cn(
+                    "px-3 py-1 rounded-full text-xs font-semibold",
+                    statusColors[todo.status]
+                  )}>
                     {statusLabels[todo.status]}
                   </div>
-                )}
-              </div>
+                </div>
 
-              {/* Priority */}
-              <div className="col-span-2 flex items-center">
-                {editingId === todo.id && editField === 'priority' ? (
-                  <select
-                    value={newValue}
-                    onChange={(e) => setNewValue(e.target.value)}
-                    onBlur={saveEdit}
-                    className="w-full px-2 py-1 border border-primary rounded text-sm"
-                    autoFocus
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
-                  </select>
-                ) : (
-                  <div
-                    onClick={() => startEdit(todo.id, 'priority', todo.priority)}
-                    className={cn(
-                      "text-sm font-semibold cursor-pointer hover:bg-gray-100 px-2 py-1 rounded capitalize",
-                      priorityColors[todo.priority]
-                    )}
-                  >
+                {/* Priority */}
+                <div className="col-span-2 flex items-center">
+                  <div className={cn(
+                    "text-sm font-semibold capitalize",
+                    priorityColors[todo.priority]
+                  )}>
                     {todo.priority}
                   </div>
-                )}
-              </div>
+                </div>
 
-              {/* Due Date */}
-              <div className="col-span-2 flex items-center">
-                {editingId === todo.id && editField === 'due_date' ? (
-                  <input
-                    type="date"
-                    value={newValue ? new Date(newValue).toISOString().split('T')[0] : ''}
-                    onChange={(e) => setNewValue(e.target.value)}
-                    onBlur={saveEdit}
-                    className="w-full px-2 py-1 border border-primary rounded text-sm"
-                    autoFocus
-                  />
-                ) : (
-                  <div
-                    onClick={() => startEdit(todo.id, 'due_date', todo.due_date)}
-                    className="flex items-center gap-1 text-sm text-gray-600 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
-                  >
+                {/* Due Date */}
+                <div className="col-span-3 flex items-center">
+                  <div className="flex items-center gap-1 text-sm text-gray-600">
                     <Calendar size={14} />
-                    {todo.due_date ? format(new Date(todo.due_date), 'MMM d') : '-'}
+                    {todo.due_date ? format(new Date(todo.due_date), 'MMM d, yyyy') : '-'}
                   </div>
-                )}
+                </div>
               </div>
-
-              {/* Actions */}
-              <div className="col-span-2 flex items-center">
-                <button
-                  onClick={() => deleteTodo(todo.id)}
-                  className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Modal */}
+      <TodoModal
+        todo={selectedTodo}
+        isOpen={showModal}
+        isCreating={isCreating}
+        onClose={() => {
+          setShowModal(false);
+          setSelectedTodo(null);
+          setIsCreating(false);
+        }}
+        onSave={updateTodo}
+        onCreate={createTodo}
+        onDelete={deleteTodo}
+      />
+    </>
   );
 };
