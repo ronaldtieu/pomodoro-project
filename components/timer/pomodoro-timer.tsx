@@ -20,14 +20,15 @@ export const PomodoroTimer: React.FC = () => {
     currentTaskId,
     startSession,
     pauseTimer,
-    resetTimer,
+    handleReset,
     skipBreak,
     abandonSession,
     formatTime,
     getProgressPercentage,
+    saveCurrentTask,
   } = useTimer();
 
-  const { tasks } = useTasks();
+  const { tasks, refetch } = useTasks();
   const [showBreakPrompt, setShowBreakPrompt] = useState(false);
   const [nextSessionType, setNextSessionType] = useState<'short_break' | 'long_break'>('short_break');
 
@@ -71,23 +72,26 @@ export const PomodoroTimer: React.FC = () => {
   const handleTakeBreak = () => {
     setShowBreakPrompt(false);
     startSession(nextSessionType, currentTaskId);
+    refetch();
   };
 
   const handleSkipBreak = () => {
     setShowBreakPrompt(false);
     skipBreak();
+    refetch();
   };
 
   const handleAbandonSession = () => {
     setShowBreakPrompt(false);
     abandonSession();
+    refetch();
   };
 
   const handleStart = () => {
     if (!isActive && !isPaused) {
       startSession(currentSession);
     } else if (isPaused) {
-      startSession(currentSession);
+      startSession(currentSession, currentTaskId, true);
     }
   };
 
@@ -112,14 +116,27 @@ export const PomodoroTimer: React.FC = () => {
             progress={getProgressPercentage()}
           />
 
-          {currentTask && (
-            <div className="text-center">
-              <div className="inline-block px-4 py-2 bg-primary/10 border-2 border-primary rounded-lg">
-                <span className="text-sm text-gray-600">Working on: </span>
-                <span className="font-bold text-primary">{currentTask.title}</span>
+          <div className="text-center space-y-2">
+            <span className="text-sm text-gray-600 block">
+              Working on:
+            </span>
+            <button
+              onClick={() => {
+                const taskSection = document.getElementById('task-list-section');
+                if (taskSection) {
+                  taskSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className="px-4 py-2 bg-white border-2 border-primary pixel-rounded text-sm font-bold text-primary cursor-pointer hover:bg-primary/5 shadow-pixel-sm active:translate-y-0.5 active:shadow-none transition-all max-w-xs"
+            >
+              {currentTask ? currentTask.title : 'No task selected'}
+            </button>
+            {currentTask && (
+              <div className="text-xs text-gray-500">
+                {currentTask.pomodoro_count} pomodoro{currentTask.pomodoro_count !== 1 ? 's' : ''} completed
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <div className="flex items-center justify-center gap-4">
             {!isActive || isPaused ? (
@@ -149,7 +166,11 @@ export const PomodoroTimer: React.FC = () => {
             )}
 
             <PixelButton
-              onClick={resetTimer}
+              onClick={() => {
+                setShowBreakPrompt(false);
+                handleReset();
+                refetch();
+              }}
               variant="ghost"
               size="lg"
               className="min-w-[140px]"

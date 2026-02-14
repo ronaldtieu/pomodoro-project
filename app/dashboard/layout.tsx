@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/sidebar';
+import { FloatingTimer } from '@/components/timer/floating-timer';
 
 export default async function DashboardLayout({
   children,
@@ -23,6 +24,7 @@ export default async function DashboardLayout({
       <div className="flex-1 flex flex-col">
         {children}
       </div>
+      <FloatingTimer />
     </div>
   );
 }

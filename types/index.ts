@@ -7,9 +7,42 @@ export interface Task {
   description: string | null;
   completed: boolean;
   pomodoro_count: number;
+  category_id: string | null;
   created_at: string;
   updated_at: string;
   completed_at: string | null;
+}
+
+export interface Category {
+  id: string;
+  user_id: string;
+  name: string;
+  color: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CategoryAnalytics {
+  categoryId: string | null;
+  categoryName: string;
+  categoryColor: string;
+  focusTime: number;
+  sessionCount: number;
+  taskCount: number;
+}
+
+export interface TodoItem {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  status: 'not_started' | 'in_progress' | 'done';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  tags: string[];
+  due_date: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface PomodoroSession {
@@ -34,6 +67,7 @@ export interface UserSettings {
   auto_start_breaks: boolean;
   auto_start_work: boolean;
   sound_enabled: boolean;
+  current_task_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -51,8 +85,10 @@ export interface AnalyticsData {
   totalFocusTime: number;
   todayFocusTime: number;
   weekFocusTime: number;
+  avgDailyFocusTime: number;
   breakComplianceRate: number;
   tasksCompleted: number;
   tasksAbandoned: number;
   dailyProductivity: Array<{ date: string; count: number; focusTime: number }>;
+  categoryBreakdown: CategoryAnalytics[];
 }

@@ -1,4 +1,4 @@
-import { Task, PomodoroSession, UserSettings } from '@/types';
+import { Task, PomodoroSession, UserSettings, Category } from '@/types';
 
 export const queries = {
   // Tasks
@@ -98,6 +98,23 @@ export const queries = {
     return data as PomodoroSession[];
   },
 
+  getTodayCompletedWorkSessions: async (supabase: any, userId: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const { data, error } = await supabase
+      .from('pomodoro_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('type', 'work')
+      .not('completed_at', 'is', null)
+      .gte('completed_at', today.toISOString())
+      .order('completed_at', { ascending: false });
+
+    if (error) throw error;
+    return data as PomodoroSession[];
+  },
+
   // User Settings
   getUserSettings: async (supabase: any, userId: string) => {
     const { data, error } = await supabase
@@ -139,15 +156,56 @@ export const queries = {
     return data as UserSettings;
   },
 
-  updateUserSettings: async (supabase: any, userId: string, settings: Partial<UserSettings>) => {
+  updateCurrentTask: async (supabase: any, userId: string, taskId: string | null) => {
     const { data, error } = await supabase
       .from('user_settings')
-      .update({ ...settings, updated_at: new Date().toISOString() })
+      .update({ current_task_id: taskId, updated_at: new Date().toISOString() })
       .eq('user_id', userId)
       .select()
       .single();
 
     if (error) throw error;
     return data as UserSettings;
+  },
+
+  // Categories
+  getCategories: async (supabase: any, userId: string) => {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    return data as Category[];
+  },
+
+  createCategory: async (supabase: any, category: Partial<Category>) => {
+    const { data, error } = await supabase
+      .from('categories')
+      .insert(category)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as Category;
+  },
+
+  updateCategory: async (supabase: any, id: string, updates: Partial<Category>) => {
+    const { data, error } = await supabase
+      .from('categories')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as Category;
+  },
+
+  deleteCategory: async (supabase: any, id: string) => {
+    const { error } = await supabase.from('categories').delete().eq('id', id);
+
+    if (error) throw error;
   },
 };

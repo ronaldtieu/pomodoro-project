@@ -53,7 +53,7 @@ export const PixelDialog: React.FC<PixelDialogProps> = ({
       <div
         ref={dialogRef}
         className={cn(
-          'bg-surface border-2 border-gray-900 rounded-lg shadow-pixel-lg',
+          'bg-surface border-2 border-gray-900 pixel-rounded shadow-pixel-lg',
           'w-full max-w-md mx-4',
           className
         )}
@@ -62,9 +62,9 @@ export const PixelDialog: React.FC<PixelDialogProps> = ({
           <h2 className="text-xl font-bold text-gray-900">{title}</h2>
           <button
             onClick={onClose}
-            className="p-1 text-gray-600 hover:text-gray-900 transition-colors"
+            className="p-1.5 pixel-rounded border-2 border-gray-400 text-gray-600 hover:text-gray-900 hover:border-gray-900 hover:bg-gray-100 shadow-pixel-sm active:translate-y-0.5 active:shadow-none transition-all"
           >
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
         <div className="p-6">{children}</div>

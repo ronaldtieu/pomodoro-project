@@ -1,0 +1,244 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+:root {
+  --primary: #FF6B6B;
+  --secondary: #4ECDC4;
+  --accent: #FFE66D;
+  --success: #95E616;
+  --background: #FFF5E1; /* Warm cream */
+  --surface: #FFFFFF;
+  --text: #2D3748;
+
+  /* Pixel theme colors */
+  --pixel-pink: #FF8FAB;
+  --pixel-purple: #C4A1FF;
+  --pixel-blue: #7DD3FC;
+  --pixel-green: #86EFAC;
+  --pixel-yellow: #FDE047;
+  --pixel-orange: #FDBA74;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-size: 18px;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: var(--background);
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 8px,
+      rgba(0, 0, 0, 0.02) 8px,
+      rgba(0, 0, 0, 0.02) 16px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 8px,
+      rgba(0, 0, 0, 0.02) 8px,
+      rgba(0, 0, 0, 0.02) 16px
+    );
+  font-family: 'VT323', monospace;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: none;
+  image-rendering: pixelated;
+  line-height: 1.4;
+}
+
+/* Pixel font headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Press Start 2P', cursive;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+h1 { font-size: 2rem; line-height: 1.4; }
+h2 { font-size: 1.5rem; line-height: 1.4; }
+h3 { font-size: 1.25rem; line-height: 1.4; }
+h4 { font-size: 1rem; line-height: 1.4; }
+
+p, span, div {
+  font-size: 1rem;
+}
+
+button {
+  font-family: 'Press Start 2P', cursive;
+}
+
+input, textarea {
+  font-family: 'VT323', monospace;
+  font-size: 1rem;
+  image-rendering: pixelated;
+}
+
+/* Pixel grid background pattern */
+.pixel-grid {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.05) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.05) 2px, transparent 2px);
+  background-size: 16px 16px;
+}
+
+/* Pixel border effect */
+.pixel-border {
+  border: 4px solid currentColor;
+  box-shadow:
+    4px 4px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Cute rounded corners with pixel feel */
+.pixel-rounded {
+  border-radius: 4px;
+}
+
+/* Animations */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.animate-confetti-fall {
+  animation: confetti-fall 3s ease-in forwards;
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.5s ease-out;
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow:
+      4px 4px 0 rgba(255, 107, 107, 0.4),
+      0 0 20px rgba(255, 107, 107, 0.2);
+  }
+  50% {
+    box-shadow:
+      4px 4px 0 rgba(255, 107, 107, 0.4),
+      0 0 30px rgba(255, 107, 107, 0.4);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.3s ease-in-out;
+}
+
+@keyframes scale-up {
+  from {
+    transform: scale(0.95);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.animate-scale-up {
+  animation: scale-up 0.2s ease-out;
+}
+
+@keyframes pixel-wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(1deg);
+  }
+  75% {
+    transform: rotate(-1deg);
+  }
+}
+
+.animate-pixel-wiggle {
+  animation: pixel-wiggle 0.5s ease-in-out infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 16px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+  border-left: 4px solid rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border: 4px solid rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--pixel-pink);
+}
+
+/* Selection */
+::selection {
+  background: var(--pixel-yellow);
+  color: var(--text);
+}
+

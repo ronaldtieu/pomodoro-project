@@ -49,38 +49,35 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({
       </div>
 
       <div className="relative">
-        <svg className="w-72 h-72 transform -rotate-90">
+        <svg className="w-96 h-96 transform -rotate-90" viewBox="0 0 384 384">
           <circle
-            cx="144"
-            cy="144"
-            r="130"
+            cx="192"
+            cy="192"
+            r="170"
             stroke="currentColor"
-            strokeWidth="12"
+            strokeWidth="14"
             fill="transparent"
             className="text-gray-200"
           />
           <circle
-            cx="144"
-            cy="144"
-            r="130"
+            cx="192"
+            cy="192"
+            r="170"
             stroke="currentColor"
-            strokeWidth="12"
+            strokeWidth="14"
             fill="transparent"
-            strokeDasharray={`${2 * Math.PI * 130}`}
-            strokeDashoffset={`${2 * Math.PI * 130 * (1 - progress / 100)}`}
+            strokeDasharray={`${2 * Math.PI * 170}`}
+            strokeDashoffset={`${2 * Math.PI * 170 * (progress / 100)}`}
+            strokeLinecap="butt"
             className={cn('transition-all duration-1000', getSessionColor())}
           />
         </svg>
 
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-7xl font-bold font-mono text-gray-900">
+          <span className="text-8xl font-bold font-pixel-body text-gray-900">
             {formatTime(timeRemaining)}
           </span>
         </div>
-      </div>
-
-      <div className="text-sm text-gray-600">
-        {Math.round(progress)}% complete
       </div>
     </div>
   );
