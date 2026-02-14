@@ -6,9 +6,10 @@ import { createClient } from '@/lib/supabase/client';
 import { TodoItem } from '@/types';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { PixelButton } from '@/components/ui/pixel-button';
 import { TodoModal } from './todo-modal';
 
-export const NotionTodoList: React.FC = () => {
+export const TodoList: React.FC = () => {
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTodo, setSelectedTodo] = useState<TodoItem | null>(null);
@@ -152,13 +153,12 @@ export const NotionTodoList: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">All Todos</h2>
-          <button
-            onClick={handleNewClick}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:brightness-110 transition-all font-pixel text-sm"
-          >
-            <Plus size={16} />
-            New
-          </button>
+          <PixelButton onClick={handleNewClick} variant="primary">
+            <div className="flex items-center gap-2">
+              <Plus size={16} />
+              New
+            </div>
+          </PixelButton>
         </div>
 
         {/* Table Header */}

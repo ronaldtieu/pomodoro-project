@@ -39,10 +39,10 @@ export const Sidebar: React.FC = () => {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all',
+                'flex items-center gap-3 px-4 py-3 pixel-rounded border-2 font-semibold shadow-pixel-sm active:translate-y-0.5 active:shadow-none transition-all',
                 isActive
-                  ? 'bg-primary text-white shadow-pixel-sm'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-primary border-primary text-white'
+                  : 'border-gray-400 text-gray-700 hover:bg-gray-100 hover:border-gray-900'
               )}
             >
               <item.icon size={20} />
@@ -54,7 +54,7 @@ export const Sidebar: React.FC = () => {
 
       <button
         onClick={handleLogout}
-        className="flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all mt-auto"
+        className="flex items-center gap-3 px-4 py-3 pixel-rounded border-2 border-gray-400 font-semibold text-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-300 shadow-pixel-sm active:translate-y-0.5 active:shadow-none transition-all mt-auto"
       >
         <LogOut size={20} />
         Logout

@@ -79,10 +79,6 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({
           </span>
         </div>
       </div>
-
-      <div className="text-sm text-gray-600">
-        {Math.round(progress)}% complete
-      </div>
     </div>
   );
 };

@@ -62,7 +62,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ analytics }) => {
           <div className="flex items-center gap-2">
             <button
               onClick={previousMonth}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 pixel-rounded border-2 border-gray-400 hover:bg-gray-100 hover:border-gray-900 shadow-pixel-sm active:translate-y-0.5 active:shadow-none transition-all"
             >
               <ChevronLeft size={20} />
             </button>
@@ -71,7 +71,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ analytics }) => {
             </span>
             <button
               onClick={nextMonth}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 pixel-rounded border-2 border-gray-400 hover:bg-gray-100 hover:border-gray-900 shadow-pixel-sm active:translate-y-0.5 active:shadow-none transition-all"
             >
               <ChevronRight size={20} />
             </button>
@@ -165,11 +165,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ analytics }) => {
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-gray-900">
-                {Math.round(
-                  analytics.dailyProductivity
-                    .filter((d) => d.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`))
-                    .reduce((sum, d) => sum + d.focusTime, 0)
-                )}m
+                {(() => {
+                  const minutes = Math.round(
+                    analytics.dailyProductivity
+                      .filter((d) => d.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`))
+                      .reduce((sum, d) => sum + d.focusTime, 0)
+                  );
+                  const hours = Math.floor(minutes / 60);
+                  const mins = minutes % 60;
+                  return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+                })()}
               </div>
               <div className="text-xs text-gray-600">Total Focus</div>
             </div>

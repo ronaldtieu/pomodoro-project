@@ -4,6 +4,7 @@ import React from 'react';
 import { StatsCards } from '@/components/analytics/stats-cards';
 import { ProductivityChart } from '@/components/analytics/productivity-chart';
 import { BreakComplianceChart } from '@/components/analytics/break-compliance-chart';
+import { CategoryChart } from '@/components/analytics/category-chart';
 import { CalendarView } from '@/components/analytics/calendar-view';
 import { Header } from '@/components/layout/header';
 import { useAnalytics } from '@/lib/hooks/use-analytics';
@@ -36,6 +37,8 @@ export default function AnalyticsPage() {
           <ProductivityChart analytics={analytics} />
           <BreakComplianceChart analytics={analytics} />
         </div>
+
+        <CategoryChart analytics={analytics} />
 
         <CalendarView analytics={analytics} />
       </main>

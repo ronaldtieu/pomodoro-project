@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { queries } from '@/lib/supabase/queries';
-import { PomodoroSession, AnalyticsData } from '@/types';
+import { PomodoroSession, AnalyticsData, CategoryAnalytics } from '@/types';
 
 export const useAnalytics = () => {
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     totalFocusTime: 0,
     todayFocusTime: 0,
     weekFocusTime: 0,
+    avgDailyFocusTime: 0,
     breakComplianceRate: 0,
     tasksCompleted: 0,
     tasksAbandoned: 0,
     dailyProductivity: [],
+    categoryBreakdown: [],
   });
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
@@ -31,13 +33,6 @@ export const useAnalytics = () => {
         (session) => new Date(session.started_at) >= today
       );
 
-      // Get this week's sessions
-      const weekAgo = new Date(today);
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      const weekSessions = allSessions.filter(
-        (session) => new Date(session.started_at) >= weekAgo
-      );
-
       // Calculate focus time (work sessions only, in minutes)
       const calculateFocusTime = (sessions: PomodoroSession[]) =>
         sessions
@@ -46,7 +41,21 @@ export const useAnalytics = () => {
 
       const totalFocusTime = calculateFocusTime(allSessions);
       const todayFocusTime = calculateFocusTime(todaySessions);
+
+      // Get this week's sessions (last 7 days)
+      const weekAgo = new Date(today);
+      weekAgo.setDate(weekAgo.getDate() - 6);
+      const weekSessions = allSessions.filter(
+        (session) => new Date(session.started_at) >= weekAgo
+      );
       const weekFocusTime = calculateFocusTime(weekSessions);
+
+      // Calculate average daily focus time (total focus / number of active days)
+      const completedWorkSessionsAll = allSessions.filter((s) => s.type === 'work' && s.completed_at);
+      const activeDays = new Set(
+        completedWorkSessionsAll.map((s) => new Date(s.started_at).toISOString().split('T')[0])
+      );
+      const avgDailyFocusTime = activeDays.size > 0 ? totalFocusTime / activeDays.size : 0;
 
       // Calculate break compliance
       const workSessions = allSessions.filter((s) => s.type === 'work' && s.completed_at);
@@ -93,14 +102,55 @@ export const useAnalytics = () => {
         });
       }
 
+      // Category breakdown
+      const userCategories = await queries.getCategories(supabase, user.id);
+      const taskCategoryMap: Record<string, string | null> = {};
+      tasks?.forEach((t: any) => { taskCategoryMap[t.id] = t.category_id || null; });
+
+      const categoryStatsMap: Record<string, { focusTime: number; sessionCount: number; taskIds: Set<string> }> = {};
+
+      // Initialize with "uncategorized"
+      categoryStatsMap['uncategorized'] = { focusTime: 0, sessionCount: 0, taskIds: new Set() };
+      userCategories.forEach((cat) => {
+        categoryStatsMap[cat.id] = { focusTime: 0, sessionCount: 0, taskIds: new Set() };
+      });
+
+      // Aggregate completed work sessions by category
+      const completedWorkSessions = allSessions.filter((s) => s.type === 'work' && s.completed_at);
+      completedWorkSessions.forEach((session) => {
+        const catId = session.task_id ? taskCategoryMap[session.task_id] : null;
+        const bucket = catId && categoryStatsMap[catId] ? catId : 'uncategorized';
+        categoryStatsMap[bucket].focusTime += session.duration / 60;
+        categoryStatsMap[bucket].sessionCount += 1;
+        if (session.task_id) {
+          categoryStatsMap[bucket].taskIds.add(session.task_id);
+        }
+      });
+
+      const categoryMap: Record<string, { name: string; color: string }> = {};
+      userCategories.forEach((cat) => { categoryMap[cat.id] = { name: cat.name, color: cat.color }; });
+
+      const categoryBreakdown: CategoryAnalytics[] = Object.entries(categoryStatsMap)
+        .filter(([, stats]) => stats.sessionCount > 0)
+        .map(([id, stats]) => ({
+          categoryId: id === 'uncategorized' ? null : id,
+          categoryName: id === 'uncategorized' ? 'Uncategorized' : (categoryMap[id]?.name || 'Unknown'),
+          categoryColor: id === 'uncategorized' ? '#6B7280' : (categoryMap[id]?.color || '#6B7280'),
+          focusTime: stats.focusTime,
+          sessionCount: stats.sessionCount,
+          taskCount: stats.taskIds.size,
+        }));
+
       setAnalytics({
         totalFocusTime,
         todayFocusTime,
         weekFocusTime,
+        avgDailyFocusTime,
         breakComplianceRate,
         tasksCompleted,
         tasksAbandoned,
         dailyProductivity,
+        categoryBreakdown,
       });
     } catch (error) {
       console.error('Error calculating analytics:', error);

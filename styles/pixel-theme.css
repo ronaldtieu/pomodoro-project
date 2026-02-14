@@ -75,34 +75,12 @@ p, span, div {
 
 button {
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  image-rendering: pixelated;
 }
 
 input, textarea {
   font-family: 'VT323', monospace;
   font-size: 1rem;
   image-rendering: pixelated;
-}
-
-/* Pixel shadows */
-.shadow-pixel {
-  box-shadow:
-    4px 4px 0 rgba(0, 0, 0, 0.2),
-    8px 8px 0 rgba(0, 0, 0, 0.1);
-}
-
-.shadow-pixel-sm {
-  box-shadow:
-    2px 2px 0 rgba(0, 0, 0, 0.2),
-    4px 4px 0 rgba(0, 0, 0, 0.1);
-}
-
-.shadow-pixel-lg {
-  box-shadow:
-    6px 6px 0 rgba(0, 0, 0, 0.2),
-    12px 12px 0 rgba(0, 0, 0, 0.1);
 }
 
 /* Pixel grid background pattern */

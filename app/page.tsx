@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { PixelButton } from '@/components/ui/pixel-button';
 import { Timer, Target, BarChart3, CheckCircle } from 'lucide-react';
+import { PomodoroTimer } from '@/components/timer/pomodoro-timer';
 
 export default function LandingPage() {
   return (
@@ -40,8 +41,8 @@ export default function LandingPage() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          <div className="bg-white border-2 border-gray-900 rounded-lg shadow-pixel p-6">
-            <div className="w-12 h-12 bg-primary/10 border-2 border-primary rounded-lg flex items-center justify-center mb-4">
+          <div className="bg-white border-2 border-gray-900 pixel-rounded shadow-pixel p-6">
+            <div className="w-12 h-12 bg-primary/10 border-2 border-primary pixel-rounded flex items-center justify-center mb-4">
               <Timer className="text-primary" size={24} />
             </div>
             <h3 className="text-base font-bold text-gray-900 mb-2">Pomodoro Timer</h3>
@@ -50,8 +51,8 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="bg-white border-2 border-gray-900 rounded-lg shadow-pixel p-6">
-            <div className="w-12 h-12 bg-secondary/10 border-2 border-secondary rounded-lg flex items-center justify-center mb-4">
+          <div className="bg-white border-2 border-gray-900 pixel-rounded shadow-pixel p-6">
+            <div className="w-12 h-12 bg-secondary/10 border-2 border-secondary pixel-rounded flex items-center justify-center mb-4">
               <Target className="text-secondary" size={24} />
             </div>
             <h3 className="text-base font-bold text-gray-900 mb-2">Task Management</h3>
@@ -60,8 +61,8 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="bg-white border-2 border-gray-900 rounded-lg shadow-pixel p-6">
-            <div className="w-12 h-12 bg-accent/10 border-2 border-accent rounded-lg flex items-center justify-center mb-4">
+          <div className="bg-white border-2 border-gray-900 pixel-rounded shadow-pixel p-6">
+            <div className="w-12 h-12 bg-accent/10 border-2 border-accent pixel-rounded flex items-center justify-center mb-4">
               <BarChart3 className="text-accent" size={24} />
             </div>
             <h3 className="text-base font-bold text-gray-900 mb-2">Analytics</h3>
@@ -70,8 +71,8 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="bg-white border-2 border-gray-900 rounded-lg shadow-pixel p-6">
-            <div className="w-12 h-12 bg-success/10 border-2 border-success rounded-lg flex items-center justify-center mb-4">
+          <div className="bg-white border-2 border-gray-900 pixel-rounded shadow-pixel p-6">
+            <div className="w-12 h-12 bg-success/10 border-2 border-success pixel-rounded flex items-center justify-center mb-4">
               <CheckCircle className="text-success" size={24} />
             </div>
             <h3 className="text-base font-bold text-gray-900 mb-2">Break Tracking</h3>
@@ -81,16 +82,8 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div className="bg-white border-2 border-gray-900 rounded-lg shadow-pixel-lg p-8 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to Focus?</h2>
-          <p className="text-gray-600 mb-6">
-            Join thousands of productive users achieving their goals
-          </p>
-          <Link href="/signup">
-            <PixelButton size="lg" variant="primary">
-              Start Your Journey
-            </PixelButton>
-          </Link>
+        <div className="bg-white border-2 border-gray-900 pixel-rounded shadow-pixel-lg p-8">
+          <PomodoroTimer />
         </div>
       </main>
     </div>

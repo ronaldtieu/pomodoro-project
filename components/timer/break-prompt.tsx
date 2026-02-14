@@ -66,7 +66,7 @@ export const BreakPrompt: React.FC<BreakPromptProps> = ({
 
             <button
               onClick={onAbandonSession}
-              className="w-full text-gray-600 hover:text-gray-900 transition-colors font-semibold"
+              className="w-full px-4 py-2.5 pixel-rounded border-2 border-gray-400 text-gray-600 hover:text-gray-900 hover:border-gray-900 shadow-pixel-sm active:translate-y-0.5 active:shadow-none transition-all font-semibold"
             >
               <div className="flex items-center justify-center gap-2">
                 <X size={18} />

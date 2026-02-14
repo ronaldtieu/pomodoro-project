@@ -1,9 +1,131 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { X, Calendar, Tag, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Calendar, AlertCircle } from 'lucide-react';
 import { TodoItem } from '@/types';
 import { format } from 'date-fns';
+
+interface PickerOption {
+  value: string;
+  label: string;
+}
+
+interface IOSPickerProps {
+  options: PickerOption[];
+  value: string;
+  onChange: (value: any) => void;
+}
+
+const IOSPicker: React.FC<IOSPickerProps> = ({ options, value, onChange }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startY, setStartY] = useState(0);
+  const [scrollTop, setScrollTop] = useState(0);
+
+  const itemHeight = 44;
+  const visibleItems = 3;
+  const containerHeight = itemHeight * visibleItems;
+
+  const currentIndex = options.findIndex(opt => opt.value === value);
+
+  useEffect(() => {
+    if (containerRef.current && !isDragging) {
+      const targetScrollTop = currentIndex * itemHeight;
+      containerRef.current.scrollTop = targetScrollTop;
+    }
+  }, [currentIndex, itemHeight, isDragging]);
+
+  const handleScroll = () => {
+    if (!containerRef.current || isDragging) return;
+
+    const index = Math.round(containerRef.current.scrollTop / itemHeight);
+    const clampedIndex = Math.max(0, Math.min(index, options.length - 1));
+    onChange(options[clampedIndex].value);
+  };
+
+  const handleStart = (clientY: number) => {
+    setIsDragging(true);
+    setStartY(clientY);
+    if (containerRef.current) {
+      setScrollTop(containerRef.current.scrollTop);
+    }
+  };
+
+  const handleMove = (clientY: number) => {
+    if (!isDragging || !containerRef.current) return;
+
+    const deltaY = startY - clientY;
+    containerRef.current.scrollTop = scrollTop + deltaY;
+  };
+
+  const handleEnd = () => {
+    if (!containerRef.current) return;
+
+    setIsDragging(false);
+    const index = Math.round(containerRef.current.scrollTop / itemHeight);
+    const clampedIndex = Math.max(0, Math.min(index, options.length - 1));
+
+    // Snap to selection
+    containerRef.current.scrollTo({
+      top: clampedIndex * itemHeight,
+      behavior: 'smooth'
+    });
+
+    onChange(options[clampedIndex].value);
+  };
+
+  return (
+    <div className="relative border-2 border-gray-300 rounded-lg overflow-hidden bg-gray-50" style={{ height: containerHeight }}>
+      {/* Selection highlight */}
+      <div
+        className="absolute left-0 right-0 bg-primary/10 border-y-2 border-primary pointer-events-none z-10"
+        style={{
+          top: '50%',
+          transform: 'translateY(-50%)',
+          height: itemHeight
+        }}
+      />
+
+      {/* Scrollable content */}
+      <div
+        ref={containerRef}
+        className="h-full overflow-y-auto scrollbar-hide"
+        onScroll={handleScroll}
+        style={{ paddingTop: itemHeight, paddingBottom: itemHeight }}
+        onMouseDown={(e) => handleStart(e.clientY)}
+        onMouseMove={(e) => handleMove(e.clientY)}
+        onMouseUp={handleEnd}
+        onMouseLeave={handleEnd}
+        onTouchStart={(e) => handleStart(e.touches[0].clientY)}
+        onTouchMove={(e) => handleMove(e.touches[0].clientY)}
+        onTouchEnd={handleEnd}
+      >
+        {options.map((option, index) => (
+          <div
+            key={option.value}
+            onClick={() => {
+              onChange(option.value);
+              if (containerRef.current) {
+                containerRef.current.scrollTo({
+                  top: index * itemHeight,
+                  behavior: 'smooth'
+                });
+              }
+            }}
+            className="flex items-center justify-center text-center font-pixel text-sm font-semibold cursor-pointer select-none hover:bg-gray-100 active:bg-gray-200 transition-colors"
+            style={{ height: itemHeight }}
+          >
+            {option.label}
+          </div>
+        ))}
+      </div>
+
+      {/* Fade overlays */}
+      <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-gray-50 to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none" />
+    </div>
+  );
+};
 
 interface TodoModalProps {
   todo: TodoItem | null;
@@ -80,31 +202,6 @@ export const TodoModal: React.FC<TodoModalProps> = ({ todo, isOpen, onClose, onS
     }
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      await onSave(todo.id, {
-        title: title.trim(),
-        description: description.trim(),
-        status,
-        priority,
-        due_date: dueDate || null,
-      });
-      onClose();
-    } catch (error) {
-      console.error('Error saving todo:', error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (confirm('Are you sure you want to delete this todo?')) {
-      await onDelete(todo.id);
-      onClose();
-    }
-  };
-
   const statusColors = {
     not_started: 'bg-gray-100 text-gray-700 hover:bg-gray-200',
     in_progress: 'bg-blue-100 text-blue-700 hover:bg-blue-200',
@@ -126,7 +223,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({ todo, isOpen, onClose, onS
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white border-2 border-gray-900 rounded-lg shadow-pixel-lg max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white border-2 border-gray-900 pixel-rounded shadow-pixel-lg max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="p-6 border-b-2 border-gray-200">
           <div className="flex items-start justify-between gap-4">
@@ -151,7 +248,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({ todo, isOpen, onClose, onS
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-1.5 pixel-rounded border-2 border-gray-400 text-gray-600 hover:text-gray-900 hover:border-gray-900 hover:bg-gray-100 shadow-pixel-sm active:translate-y-0.5 active:shadow-none transition-all"
             >
               <X size={20} />
             </button>
@@ -175,129 +272,38 @@ export const TodoModal: React.FC<TodoModalProps> = ({ todo, isOpen, onClose, onS
           </div>
 
           {/* Properties Grid */}
-          <div className="grid grid-cols-1 gap-6">
-            {/* Status Slider */}
+          <div className="grid grid-cols-2 gap-6">
+            {/* Status Picker */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Status
               </label>
-              <div className="relative">
-                {/* Digital Display */}
-                <div className="text-center mb-3">
-                  <div className={`inline-block px-4 py-2 rounded-lg font-pixel text-sm font-bold border-2 ${
-                    status === 'not_started' ? 'bg-gray-100 border-gray-300 text-gray-700' :
-                    status === 'in_progress' ? 'bg-blue-100 border-blue-300 text-blue-700' :
-                    'bg-green-100 border-green-300 text-green-700'
-                  }`}>
-                    {statusLabels[status]}
-                  </div>
-                </div>
-
-                {/* Slider Track */}
-                <div className="relative h-2 bg-gray-200 rounded-full">
-                  {/* Progress Fill */}
-                  <div
-                    className={`absolute h-full rounded-full transition-all duration-300 ${
-                      status === 'not_started' ? 'w-0 bg-gray-400' :
-                      status === 'in_progress' ? 'w-1/2 bg-blue-500' :
-                      'w-full bg-green-500'
-                    }`}
-                  />
-
-                  {/* Slider Points */}
-                  <div className="absolute inset-0 flex justify-between">
-                    {(['not_started', 'in_progress', 'done'] as const).map((s, idx) => {
-                      const isSelected = status === s;
-                      const position = idx === 0 ? '0%' : idx === 1 ? '50%' : '100%';
-                      return (
-                        <button
-                          key={s}
-                          onClick={() => setStatus(s)}
-                          className={`absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 w-6 h-6 rounded-full border-2 transition-all duration-200 ${
-                            isSelected
-                              ? (s === 'not_started' ? 'bg-gray-500 border-gray-700 scale-110 shadow-lg' :
-                                 s === 'in_progress' ? 'bg-blue-500 border-blue-700 scale-110 shadow-lg' :
-                                 'bg-green-500 border-green-700 scale-110 shadow-lg')
-                              : 'bg-white border-gray-300 hover:scale-125'
-                          }`}
-                          style={{ left: position }}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Labels */}
-                <div className="flex justify-between mt-2 text-xs font-semibold text-gray-600 font-pixel">
-                  <span>Not Started</span>
-                  <span>In Progress</span>
-                  <span>Done</span>
-                </div>
-              </div>
+              <IOSPicker
+                options={[
+                  { value: 'not_started', label: 'Not Started' },
+                  { value: 'in_progress', label: 'In Progress' },
+                  { value: 'done', label: 'Done' },
+                ]}
+                value={status}
+                onChange={setStatus}
+              />
             </div>
 
-            {/* Priority Slider */}
+            {/* Priority Picker */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Priority
               </label>
-              <div className="relative">
-                {/* Digital Display */}
-                <div className="text-center mb-3">
-                  <div className={`inline-block px-4 py-2 rounded-lg font-pixel text-sm font-bold border-2 capitalize ${
-                    priority === 'low' ? 'bg-gray-100 border-gray-300 text-gray-600' :
-                    priority === 'medium' ? 'bg-yellow-100 border-yellow-300 text-yellow-700' :
-                    priority === 'high' ? 'bg-orange-100 border-orange-300 text-orange-700' :
-                    'bg-red-100 border-red-300 text-red-700'
-                  }`}>
-                    {priority.toUpperCase()}
-                  </div>
-                </div>
-
-                {/* Slider Track */}
-                <div className="relative h-2 bg-gray-200 rounded-full">
-                  {/* Progress Fill */}
-                  <div
-                    className={`absolute h-full rounded-full transition-all duration-300 ${
-                      priority === 'low' ? 'w-0 bg-gray-400' :
-                      priority === 'medium' ? 'w-1/3 bg-yellow-500' :
-                      priority === 'high' ? 'w-2/3 bg-orange-500' :
-                      'w-full bg-red-500'
-                    }`}
-                  />
-
-                  {/* Slider Points */}
-                  <div className="absolute inset-0 flex justify-between">
-                    {(['low', 'medium', 'high', 'urgent'] as const).map((p, idx) => {
-                      const isSelected = priority === p;
-                      const position = idx === 0 ? '0%' : idx === 1 ? '33.33%' : idx === 2 ? '66.67%' : '100%';
-                      return (
-                        <button
-                          key={p}
-                          onClick={() => setPriority(p)}
-                          className={`absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 w-6 h-6 rounded-full border-2 transition-all duration-200 ${
-                            isSelected
-                              ? (p === 'low' ? 'bg-gray-500 border-gray-700 scale-110 shadow-lg' :
-                                 p === 'medium' ? 'bg-yellow-500 border-yellow-700 scale-110 shadow-lg' :
-                                 p === 'high' ? 'bg-orange-500 border-orange-700 scale-110 shadow-lg' :
-                                 'bg-red-500 border-red-700 scale-110 shadow-lg')
-                              : 'bg-white border-gray-300 hover:scale-125'
-                          }`}
-                          style={{ left: position }}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Labels */}
-                <div className="flex justify-between mt-2 text-xs font-semibold text-gray-600 font-pixel">
-                  <span>LOW</span>
-                  <span>MED</span>
-                  <span>HIGH</span>
-                  <span>URGENT</span>
-                </div>
-              </div>
+              <IOSPicker
+                options={[
+                  { value: 'low', label: 'LOW' },
+                  { value: 'medium', label: 'MEDIUM' },
+                  { value: 'high', label: 'HIGH' },
+                  { value: 'urgent', label: 'URGENT' },
+                ]}
+                value={priority}
+                onChange={setPriority}
+              />
             </div>
           </div>
 
@@ -320,7 +326,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({ todo, isOpen, onClose, onS
           {!isCreating && todo && (
             <button
               onClick={handleDelete}
-              className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-pixel text-sm"
+              className="flex items-center gap-2 px-4 py-2 text-red-600 border-2 border-gray-400 pixel-rounded hover:bg-red-50 hover:border-red-300 shadow-pixel-sm active:translate-y-0.5 active:shadow-none transition-all font-pixel text-sm"
             >
               <AlertCircle size={16} />
               Delete
@@ -329,14 +335,14 @@ export const TodoModal: React.FC<TodoModalProps> = ({ todo, isOpen, onClose, onS
           <div className="flex gap-3 ml-auto">
             <button
               onClick={onClose}
-              className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-pixel text-sm"
+              className="px-6 py-2 bg-gray-200 text-gray-700 pixel-rounded border-2 border-gray-400 hover:bg-gray-300 hover:border-gray-900 shadow-pixel-sm active:translate-y-0.5 active:shadow-none transition-all font-pixel text-sm"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={!title.trim() || isSaving}
-              className="px-6 py-2 bg-primary text-white rounded-lg hover:brightness-110 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-pixel text-sm"
+              className="px-6 py-2 bg-primary text-white pixel-rounded border-2 border-primary hover:brightness-110 shadow-pixel-sm active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed font-pixel text-sm"
             >
               {isSaving ? 'Saving...' : isCreating ? 'Create Todo' : 'Save Changes'}
             </button>

@@ -3,7 +3,7 @@
 import React from 'react';
 import { Header } from '@/components/layout/header';
 import { PixelCard } from '@/components/ui/pixel-card';
-import { NotionTodoList } from '@/components/todos/notion-todo-list';
+import { TodoList } from '@/components/todos/todo-list';
 
 export default function TodosPage() {
   return (
@@ -11,7 +11,7 @@ export default function TodosPage() {
       <Header />
       <main className="flex-1 p-6 overflow-y-auto">
         <PixelCard>
-          <NotionTodoList />
+          <TodoList />
         </PixelCard>
       </main>
     </div>
