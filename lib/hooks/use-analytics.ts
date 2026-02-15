@@ -14,6 +14,8 @@ export const useAnalytics = () => {
     tasksAbandoned: 0,
     dailyProductivity: [],
     categoryBreakdown: [],
+    weeklyCategoryBreakdown: [],
+    dailyCategoryBreakdown: [],
   });
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
@@ -107,39 +109,42 @@ export const useAnalytics = () => {
       const taskCategoryMap: Record<string, string | null> = {};
       tasks?.forEach((t: any) => { taskCategoryMap[t.id] = t.category_id || null; });
 
-      const categoryStatsMap: Record<string, { focusTime: number; sessionCount: number; taskIds: Set<string> }> = {};
-
-      // Initialize with "uncategorized"
-      categoryStatsMap['uncategorized'] = { focusTime: 0, sessionCount: 0, taskIds: new Set() };
-      userCategories.forEach((cat) => {
-        categoryStatsMap[cat.id] = { focusTime: 0, sessionCount: 0, taskIds: new Set() };
-      });
-
-      // Aggregate completed work sessions by category
-      const completedWorkSessions = allSessions.filter((s) => s.type === 'work' && s.completed_at);
-      completedWorkSessions.forEach((session) => {
-        const catId = session.task_id ? taskCategoryMap[session.task_id] : null;
-        const bucket = catId && categoryStatsMap[catId] ? catId : 'uncategorized';
-        categoryStatsMap[bucket].focusTime += session.duration / 60;
-        categoryStatsMap[bucket].sessionCount += 1;
-        if (session.task_id) {
-          categoryStatsMap[bucket].taskIds.add(session.task_id);
-        }
-      });
-
       const categoryMap: Record<string, { name: string; color: string }> = {};
       userCategories.forEach((cat) => { categoryMap[cat.id] = { name: cat.name, color: cat.color }; });
 
-      const categoryBreakdown: CategoryAnalytics[] = Object.entries(categoryStatsMap)
-        .filter(([, stats]) => stats.sessionCount > 0)
-        .map(([id, stats]) => ({
-          categoryId: id === 'uncategorized' ? null : id,
-          categoryName: id === 'uncategorized' ? 'Uncategorized' : (categoryMap[id]?.name || 'Unknown'),
-          categoryColor: id === 'uncategorized' ? '#6B7280' : (categoryMap[id]?.color || '#6B7280'),
-          focusTime: stats.focusTime,
-          sessionCount: stats.sessionCount,
-          taskCount: stats.taskIds.size,
-        }));
+      const buildCategoryBreakdown = (sessions: PomodoroSession[]): CategoryAnalytics[] => {
+        const statsMap: Record<string, { focusTime: number; sessionCount: number; taskIds: Set<string> }> = {};
+        statsMap['uncategorized'] = { focusTime: 0, sessionCount: 0, taskIds: new Set() };
+        userCategories.forEach((cat) => {
+          statsMap[cat.id] = { focusTime: 0, sessionCount: 0, taskIds: new Set() };
+        });
+
+        const completedWork = sessions.filter((s) => s.type === 'work' && s.completed_at);
+        completedWork.forEach((session) => {
+          const catId = session.task_id ? taskCategoryMap[session.task_id] : null;
+          const bucket = catId && statsMap[catId] ? catId : 'uncategorized';
+          statsMap[bucket].focusTime += session.duration / 60;
+          statsMap[bucket].sessionCount += 1;
+          if (session.task_id) {
+            statsMap[bucket].taskIds.add(session.task_id);
+          }
+        });
+
+        return Object.entries(statsMap)
+          .filter(([, stats]) => stats.sessionCount > 0)
+          .map(([id, stats]) => ({
+            categoryId: id === 'uncategorized' ? null : id,
+            categoryName: id === 'uncategorized' ? 'Uncategorized' : (categoryMap[id]?.name || 'Unknown'),
+            categoryColor: id === 'uncategorized' ? '#6B7280' : (categoryMap[id]?.color || '#6B7280'),
+            focusTime: stats.focusTime,
+            sessionCount: stats.sessionCount,
+            taskCount: stats.taskIds.size,
+          }));
+      };
+
+      const categoryBreakdown = buildCategoryBreakdown(allSessions);
+      const weeklyCategoryBreakdown = buildCategoryBreakdown(weekSessions);
+      const dailyCategoryBreakdown = buildCategoryBreakdown(todaySessions);
 
       setAnalytics({
         totalFocusTime,
@@ -151,6 +156,8 @@ export const useAnalytics = () => {
         tasksAbandoned,
         dailyProductivity,
         categoryBreakdown,
+        weeklyCategoryBreakdown,
+        dailyCategoryBreakdown,
       });
     } catch (error) {
       console.error('Error calculating analytics:', error);

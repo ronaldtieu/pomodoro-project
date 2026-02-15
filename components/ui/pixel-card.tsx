@@ -10,7 +10,7 @@ export const PixelCard: React.FC<PixelCardProps> = ({ children, className, ...pr
   return (
     <div
       className={cn(
-        'bg-surface border-2 border-gray-900 pixel-rounded shadow-pixel p-6',
+        'bg-surface border-2 border-gray-900 pixel-rounded shadow-pixel p-4 sm:p-6',
         className
       )}
       {...props}

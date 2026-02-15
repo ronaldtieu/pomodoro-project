@@ -98,7 +98,7 @@ export const PomodoroTimer: React.FC = () => {
   const currentTask = tasks.find((t) => t.id === currentTaskId);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-6">
       {showBreakPrompt && (
         <BreakPrompt
           onTakeBreak={handleTakeBreak}
@@ -109,7 +109,7 @@ export const PomodoroTimer: React.FC = () => {
       )}
 
       <PixelCard>
-        <div className="space-y-6">
+        <div className="space-y-3 sm:space-y-6">
           <TimerDisplay
             timeRemaining={timeRemaining}
             currentSession={currentSession}
@@ -138,7 +138,7 @@ export const PomodoroTimer: React.FC = () => {
             )}
           </div>
 
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-4">
             {!isActive || isPaused ? (
               <PixelButton
                 onClick={handleStart}

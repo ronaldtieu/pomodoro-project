@@ -161,8 +161,8 @@ export const TodoList: React.FC = () => {
           </PixelButton>
         </div>
 
-        {/* Table Header */}
-        <div className="grid grid-cols-12 gap-4 px-4 py-2 border-b-2 border-gray-300 text-xs font-semibold text-gray-600 uppercase tracking-wide">
+        {/* Table Header - desktop only */}
+        <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2 border-b-2 border-gray-300 text-xs font-semibold text-gray-600 uppercase tracking-wide">
           <div className="col-span-5">Title</div>
           <div className="col-span-2">Status</div>
           <div className="col-span-2">Priority</div>
@@ -170,7 +170,7 @@ export const TodoList: React.FC = () => {
         </div>
 
         {/* Todo Items */}
-        <div className="space-y-1">
+        <div className="space-y-2 md:space-y-1">
           {todos.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <p className="text-lg mb-2">No todos yet</p>
@@ -181,45 +181,71 @@ export const TodoList: React.FC = () => {
               <div
                 key={todo.id}
                 onClick={() => handleRowClick(todo)}
-                className="grid grid-cols-12 gap-4 px-4 py-3 border border-gray-200 rounded hover:bg-gray-50 hover:ring-2 hover:ring-primary transition-all cursor-pointer group"
+                className="px-4 py-3 border border-gray-200 rounded hover:bg-gray-50 hover:ring-2 hover:ring-primary transition-all cursor-pointer group"
               >
-                {/* Title */}
-                <div className="col-span-5 flex items-center min-w-0">
+                {/* Mobile: stacked card layout */}
+                <div className="md:hidden space-y-2">
                   <div
                     className={cn(
-                      "truncate font-medium",
+                      "font-medium",
                       todo.status === 'done' && 'line-through text-gray-400'
                     )}
                   >
                     {todo.title}
                   </div>
-                </div>
-
-                {/* Status */}
-                <div className="col-span-2 flex items-center">
-                  <div className={cn(
-                    "px-3 py-1 rounded-full text-xs font-semibold",
-                    statusColors[todo.status]
-                  )}>
-                    {statusLabels[todo.status]}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className={cn(
+                      "px-3 py-1 rounded-full text-xs font-semibold",
+                      statusColors[todo.status]
+                    )}>
+                      {statusLabels[todo.status]}
+                    </div>
+                    <div className={cn(
+                      "text-sm font-semibold capitalize",
+                      priorityColors[todo.priority]
+                    )}>
+                      {todo.priority}
+                    </div>
+                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                      <Calendar size={14} />
+                      {todo.due_date ? format(new Date(todo.due_date), 'MMM d, yyyy') : '-'}
+                    </div>
                   </div>
                 </div>
 
-                {/* Priority */}
-                <div className="col-span-2 flex items-center">
-                  <div className={cn(
-                    "text-sm font-semibold capitalize",
-                    priorityColors[todo.priority]
-                  )}>
-                    {todo.priority}
+                {/* Desktop: grid row layout */}
+                <div className="hidden md:grid grid-cols-12 gap-4">
+                  <div className="col-span-5 flex items-center min-w-0">
+                    <div
+                      className={cn(
+                        "truncate font-medium",
+                        todo.status === 'done' && 'line-through text-gray-400'
+                      )}
+                    >
+                      {todo.title}
+                    </div>
                   </div>
-                </div>
-
-                {/* Due Date */}
-                <div className="col-span-3 flex items-center">
-                  <div className="flex items-center gap-1 text-sm text-gray-600">
-                    <Calendar size={14} />
-                    {todo.due_date ? format(new Date(todo.due_date), 'MMM d, yyyy') : '-'}
+                  <div className="col-span-2 flex items-center">
+                    <div className={cn(
+                      "px-3 py-1 rounded-full text-xs font-semibold",
+                      statusColors[todo.status]
+                    )}>
+                      {statusLabels[todo.status]}
+                    </div>
+                  </div>
+                  <div className="col-span-2 flex items-center">
+                    <div className={cn(
+                      "text-sm font-semibold capitalize",
+                      priorityColors[todo.priority]
+                    )}>
+                      {todo.priority}
+                    </div>
+                  </div>
+                  <div className="col-span-3 flex items-center">
+                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                      <Calendar size={14} />
+                      {todo.due_date ? format(new Date(todo.due_date), 'MMM d, yyyy') : '-'}
+                    </div>
                   </div>
                 </div>
               </div>

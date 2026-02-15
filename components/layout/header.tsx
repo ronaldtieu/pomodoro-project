@@ -17,10 +17,10 @@ export const Header: React.FC = () => {
   }, []);
 
   return (
-    <header className="bg-surface border-b-2 border-gray-900 px-6 py-4">
+    <header className="bg-surface border-b-2 border-gray-900 px-4 sm:px-6 py-4 pl-16 md:pl-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome back!</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Welcome back!</h1>
           {email && <p className="text-sm text-gray-600">{email}</p>}
         </div>
         <div className="flex items-center gap-3 px-4 py-2 bg-gray-100 rounded-lg border-2 border-gray-300">

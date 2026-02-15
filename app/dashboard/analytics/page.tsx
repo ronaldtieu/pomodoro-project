@@ -16,7 +16,7 @@ export default function AnalyticsPage() {
     return (
       <div className="flex-1 flex flex-col">
         <Header />
-        <main className="flex-1 p-6 flex items-center justify-center">
+        <main className="flex-1 p-4 sm:p-6 flex items-center justify-center">
           <div className="text-gray-600">Loading analytics...</div>
         </main>
       </div>
@@ -26,9 +26,9 @@ export default function AnalyticsPage() {
   return (
     <div className="flex-1 flex flex-col">
       <Header />
-      <main className="flex-1 p-6 space-y-6 overflow-y-auto">
+      <main className="flex-1 p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">Analytics</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Analytics</h1>
         </div>
 
         <StatsCards analytics={analytics} />

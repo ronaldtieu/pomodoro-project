@@ -225,7 +225,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({ todo, isOpen, onClose, onS
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white border-2 border-gray-900 pixel-rounded shadow-pixel-lg max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b-2 border-gray-200">
+        <div className="p-3 sm:p-6 border-b-2 border-gray-200">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <input
@@ -256,7 +256,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({ todo, isOpen, onClose, onS
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
           {/* Description */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -272,7 +272,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({ todo, isOpen, onClose, onS
           </div>
 
           {/* Properties Grid */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {/* Status Picker */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -322,7 +322,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({ todo, isOpen, onClose, onS
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t-2 border-gray-200 flex items-center justify-between">
+        <div className="p-3 sm:p-6 border-t-2 border-gray-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {!isCreating && todo && (
             <button
               onClick={handleDelete}

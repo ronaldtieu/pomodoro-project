@@ -91,4 +91,6 @@ export interface AnalyticsData {
   tasksAbandoned: number;
   dailyProductivity: Array<{ date: string; count: number; focusTime: number }>;
   categoryBreakdown: CategoryAnalytics[];
+  weeklyCategoryBreakdown: CategoryAnalytics[];
+  dailyCategoryBreakdown: CategoryAnalytics[];
 }

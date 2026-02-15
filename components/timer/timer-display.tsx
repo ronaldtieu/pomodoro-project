@@ -43,13 +43,13 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-6">
+    <div className="flex flex-col items-center justify-center space-y-3 sm:space-y-6">
       <div className="text-2xl font-bold text-gray-700">
         {getSessionLabel()}
       </div>
 
       <div className="relative">
-        <svg className="w-96 h-96 transform -rotate-90" viewBox="0 0 384 384">
+        <svg className="w-48 h-48 sm:w-72 sm:h-72 md:w-96 md:h-96 transform -rotate-90" viewBox="0 0 384 384">
           <circle
             cx="192"
             cy="192"
@@ -74,7 +74,7 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({
         </svg>
 
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-8xl font-bold font-pixel-body text-gray-900">
+          <span className="text-4xl sm:text-6xl md:text-8xl font-bold font-pixel-body text-gray-900">
             {formatTime(timeRemaining)}
           </span>
         </div>

@@ -100,7 +100,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           <button
             onClick={(e) => { e.stopPropagation(); onToggleComplete(); }}
             className={cn(
-              'flex-shrink-0 w-8 h-8 border-2 pixel-rounded flex items-center justify-center shadow-pixel-sm active:translate-y-0.5 active:shadow-none transition-all',
+              'flex-shrink-0 w-10 h-10 border-2 pixel-rounded flex items-center justify-center shadow-pixel-sm active:translate-y-0.5 active:shadow-none transition-all',
               task.completed
                 ? 'bg-success border-success/80'
                 : 'border-gray-400 bg-white hover:border-success hover:bg-success/10'
@@ -117,7 +117,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 setShowMenu(!showMenu);
                 setShowDeleteConfirm(false);
               }}
-              className="p-1.5 pixel-rounded border-2 border-gray-400 text-gray-400 hover:text-gray-700 hover:border-gray-600 shadow-pixel-sm active:translate-y-0.5 active:shadow-none transition-all"
+              className="p-2 pixel-rounded border-2 border-gray-400 text-gray-400 hover:text-gray-700 hover:border-gray-600 shadow-pixel-sm active:translate-y-0.5 active:shadow-none transition-all"
             >
               <MoreHorizontal size={16} />
             </button>
