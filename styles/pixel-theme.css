@@ -61,7 +61,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Press Start 2P', cursive;
   text-transform: uppercase;
   letter-spacing: 2px;
-  text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+  text-shadow: none;
 }
 
 h1 { font-size: 2rem; line-height: 1.4; }
