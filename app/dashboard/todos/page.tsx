@@ -9,7 +9,7 @@ export default function TodosPage() {
   return (
     <div className="flex-1 flex flex-col">
       <Header />
-      <main className="flex-1 p-6 overflow-y-auto">
+      <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
         <PixelCard>
           <TodoList />
         </PixelCard>

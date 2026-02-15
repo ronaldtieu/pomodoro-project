@@ -8,8 +8,8 @@ export default function AuthLayout({
 }) {
   return (
     <div className="min-h-screen pixel-grid flex flex-col">
-      <nav className="bg-surface border-b-2 border-gray-900 px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center gap-2">
+      <nav className="bg-surface border-b-2 border-gray-900 px-4 sm:px-8 py-4">
+        <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center gap-2">
             <Timer className="text-primary" size={32} />
             <span className="text-2xl font-bold text-gray-900">Pomodoro</span>

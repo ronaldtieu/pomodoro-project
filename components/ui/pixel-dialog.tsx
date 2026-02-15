@@ -54,7 +54,7 @@ export const PixelDialog: React.FC<PixelDialogProps> = ({
         ref={dialogRef}
         className={cn(
           'bg-surface border-2 border-gray-900 pixel-rounded shadow-pixel-lg',
-          'w-full max-w-md mx-4',
+          'w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto',
           className
         )}
       >
@@ -67,7 +67,7 @@ export const PixelDialog: React.FC<PixelDialogProps> = ({
             <X size={20} />
           </button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="p-4 sm:p-6">{children}</div>
       </div>
     </div>
   );

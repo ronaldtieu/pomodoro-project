@@ -63,7 +63,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ analytics }) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
       {stats.map((stat) => (
         <PixelCard key={stat.label} className="p-4" title={stat.tooltip}>
           <div className="flex items-center gap-3">

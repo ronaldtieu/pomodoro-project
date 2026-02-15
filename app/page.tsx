@@ -6,18 +6,18 @@ import { PomodoroTimer } from '@/components/timer/pomodoro-timer';
 export default function LandingPage() {
   return (
     <div className="min-h-screen pixel-grid">
-      <nav className="bg-surface border-b-2 border-gray-900 px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Timer className="text-primary" size={32} />
-            <span className="text-2xl font-bold text-gray-900">Pomodoro</span>
+      <nav className="bg-surface border-b-2 border-gray-900 px-4 sm:px-8 py-3 sm:py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Timer className="text-primary w-6 h-6 sm:w-8 sm:h-8" />
+            <span className="text-lg sm:text-2xl font-bold text-gray-900">Pomodoro</span>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <Link href="/login">
-              <PixelButton variant="ghost">Login</PixelButton>
+              <PixelButton variant="ghost" size="sm" className="sm:px-4 sm:py-2 sm:text-sm">Login</PixelButton>
             </Link>
-            <Link href="/signup">
-              <PixelButton variant="primary">Sign Up</PixelButton>
+            <Link href="/signup" className="hidden sm:block">
+              <PixelButton variant="primary" size="sm" className="sm:px-4 sm:py-2 sm:text-sm">Sign Up</PixelButton>
             </Link>
           </div>
         </div>

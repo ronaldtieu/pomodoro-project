@@ -50,8 +50,8 @@ export const FloatingTimer: React.FC = () => {
         : 'bg-secondary';
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      <div className="bg-surface border-2 border-gray-900 pixel-rounded shadow-pixel p-3 min-w-[180px]">
+    <div className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-50">
+      <div className="bg-surface border-2 border-gray-900 pixel-rounded shadow-pixel p-3 min-w-[150px] sm:min-w-[180px]">
         {/* Header row - always visible */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">

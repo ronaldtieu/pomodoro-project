@@ -69,7 +69,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                     <button
                       key={color}
                       onClick={() => setEditColor(color)}
-                      className={`w-5 h-5 pixel-rounded border-2 transition-all ${
+                      className={`w-7 h-7 sm:w-5 sm:h-5 pixel-rounded border-2 transition-all ${
                         editColor === color ? 'border-gray-900 scale-110 shadow-pixel-sm' : 'border-transparent hover:border-gray-400'
                       }`}
                       style={{ backgroundColor: color }}
@@ -120,7 +120,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
             <button
               key={color}
               onClick={() => setNewColor(color)}
-              className={`w-6 h-6 pixel-rounded border-2 transition-all ${
+              className={`w-8 h-8 sm:w-6 sm:h-6 pixel-rounded border-2 transition-all ${
                 newColor === color ? 'border-gray-900 scale-110 shadow-pixel-sm' : 'border-transparent hover:border-gray-400'
               }`}
               style={{ backgroundColor: color }}

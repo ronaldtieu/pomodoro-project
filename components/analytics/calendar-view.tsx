@@ -57,8 +57,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ analytics }) => {
   return (
     <PixelCard>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold text-gray-900">Calendar View</h3>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900">Calendar View</h3>
           <div className="flex items-center gap-2">
             <button
               onClick={previousMonth}
@@ -66,7 +66,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ analytics }) => {
             >
               <ChevronLeft size={20} />
             </button>
-            <span className="text-lg font-semibold text-gray-700 min-w-[200px] text-center">
+            <span className="text-sm sm:text-lg font-semibold text-gray-700 min-w-[140px] sm:min-w-[200px] text-center">
               {monthNames[month]} {year}
             </span>
             <button
@@ -94,7 +94,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ analytics }) => {
           {/* Day headers */}
           <div className="grid grid-cols-7 gap-1">
             {dayNames.map((day) => (
-              <div key={day} className="text-center text-sm font-semibold text-gray-600 py-2">
+              <div key={day} className="text-center text-xs sm:text-sm font-semibold text-gray-600 py-1 sm:py-2">
                 {day}
               </div>
             ))}
