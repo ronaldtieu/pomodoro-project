@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Plus, Calendar } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Plus, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { TodoItem } from '@/types';
 import { format } from 'date-fns';
@@ -9,13 +9,45 @@ import { cn } from '@/lib/utils';
 import { PixelButton } from '@/components/ui/pixel-button';
 import { TodoModal } from './todo-modal';
 
+type SortField = 'default' | 'status' | 'priority' | 'due_date';
+
+const STATUS_ORDER: Record<string, number> = { in_progress: 0, not_started: 1, done: 2 };
+const PRIORITY_ORDER: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
+
 export const TodoList: React.FC = () => {
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTodo, setSelectedTodo] = useState<TodoItem | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [sortField, setSortField] = useState<SortField>('default');
   const supabase = createClient();
+
+  const handleSort = (field: SortField) => {
+    setSortField(prev => prev === field ? 'default' : field);
+  };
+
+  const sortedTodos = useMemo(() => {
+    if (sortField === 'default') return todos;
+    const sorted = [...todos];
+    switch (sortField) {
+      case 'status':
+        sorted.sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9));
+        break;
+      case 'priority':
+        sorted.sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 9) - (PRIORITY_ORDER[b.priority] ?? 9));
+        break;
+      case 'due_date':
+        sorted.sort((a, b) => {
+          if (!a.due_date && !b.due_date) return 0;
+          if (!a.due_date) return 1;
+          if (!b.due_date) return -1;
+          return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+        });
+        break;
+    }
+    return sorted;
+  }, [todos, sortField]);
 
   useEffect(() => {
     fetchTodos();
@@ -139,6 +171,11 @@ export const TodoList: React.FC = () => {
     urgent: 'text-red-600',
   };
 
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return null;
+    return <ChevronUp size={12} className="inline ml-0.5" />;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -161,23 +198,71 @@ export const TodoList: React.FC = () => {
           </PixelButton>
         </div>
 
-        {/* Table Header - desktop only */}
+        {/* Mobile sort controls */}
+        <div className="flex md:hidden items-center gap-2 flex-wrap">
+          <span className="text-xs font-semibold text-gray-500 uppercase">Sort by:</span>
+          {([
+            { field: 'status' as SortField, label: 'Status' },
+            { field: 'priority' as SortField, label: 'Priority' },
+            { field: 'due_date' as SortField, label: 'Due Date' },
+          ]).map(({ field, label }) => (
+            <button
+              key={field}
+              onClick={() => handleSort(field)}
+              className={cn(
+                'px-2.5 py-1 text-xs font-bold border-2 pixel-rounded transition-all active:translate-y-0.5',
+                sortField === field
+                  ? 'bg-gray-800 border-gray-800 text-white'
+                  : 'bg-white border-gray-300 text-gray-600 hover:border-gray-800'
+              )}
+            >
+              {label}
+              {sortField === field && <ChevronUp size={10} className="inline ml-0.5" />}
+            </button>
+          ))}
+        </div>
+
+        {/* Table Header - desktop only, clickable columns */}
         <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2 border-b-2 border-gray-300 text-xs font-semibold text-gray-600 uppercase tracking-wide">
           <div className="col-span-5">Title</div>
-          <div className="col-span-2">Status</div>
-          <div className="col-span-2">Priority</div>
-          <div className="col-span-3">Due Date</div>
+          <div
+            className={cn(
+              "col-span-2 cursor-pointer select-none hover:text-gray-900 transition-colors",
+              sortField === 'status' && "text-gray-900"
+            )}
+            onClick={() => handleSort('status')}
+          >
+            Status<SortIcon field="status" />
+          </div>
+          <div
+            className={cn(
+              "col-span-2 cursor-pointer select-none hover:text-gray-900 transition-colors",
+              sortField === 'priority' && "text-gray-900"
+            )}
+            onClick={() => handleSort('priority')}
+          >
+            Priority<SortIcon field="priority" />
+          </div>
+          <div
+            className={cn(
+              "col-span-3 cursor-pointer select-none hover:text-gray-900 transition-colors",
+              sortField === 'due_date' && "text-gray-900"
+            )}
+            onClick={() => handleSort('due_date')}
+          >
+            Due Date<SortIcon field="due_date" />
+          </div>
         </div>
 
         {/* Todo Items */}
         <div className="space-y-2 md:space-y-1">
-          {todos.length === 0 ? (
+          {sortedTodos.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <p className="text-lg mb-2">No todos yet</p>
               <p className="text-sm">Click &quot;New&quot; to create your first todo</p>
             </div>
           ) : (
-            todos.map((todo) => (
+            sortedTodos.map((todo) => (
               <div
                 key={todo.id}
                 onClick={() => handleRowClick(todo)}

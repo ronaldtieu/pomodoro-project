@@ -3,6 +3,7 @@ import { useTimerStore } from '@/lib/stores/timer-store';
 import { createClient } from '@/lib/supabase/client';
 import { queries } from '@/lib/supabase/queries';
 import { SessionType } from '@/types';
+import { playNotificationSound } from '@/lib/sounds';
 
 // Standalone function for saving current task — can be imported without the hook's side effects
 export const saveCurrentTask = async (taskId: string | null) => {
@@ -24,6 +25,9 @@ export const useTimer = () => {
     currentSession,
     completedSessions,
     currentTaskId,
+    targetEndTime,
+    currentSessionId,
+    sessionDuration,
     setTimeRemaining,
     decrementTime,
     startTimer,
@@ -33,11 +37,13 @@ export const useTimer = () => {
     setCompletedSessions,
     incrementCompletedSessions,
     setCurrentTaskId,
+    setTargetEndTime,
+    setCurrentSessionId,
+    setSessionDuration,
   } = useTimerStore();
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const sessionStartRef = useRef<Date | null>(null);
-  const currentSessionIdRef = useRef<string | null>(null);
   const isLoaded = useRef(false);
 
   // Load current task from database
@@ -54,6 +60,16 @@ export const useTimer = () => {
       console.error('Error loading current task:', error);
     }
   };
+
+  // On mount: recalculate time if there was an active timer persisted
+  useEffect(() => {
+    if (isActive && !isPaused && targetEndTime) {
+      const remaining = Math.max(0, Math.ceil((targetEndTime - Date.now()) / 1000));
+      setTimeRemaining(remaining);
+    }
+  // Only run once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Load today's completed sessions on mount
   useEffect(() => {
@@ -76,20 +92,57 @@ export const useTimer = () => {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (isActive && !isPaused && timeRemaining > 0) {
-      intervalRef.current = setInterval(() => {
-        decrementTime();
-      }, 1000);
-    } else if (timeRemaining === 0 && isActive) {
-      handleSessionComplete();
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+    if (isActive && !isPaused) {
+      // Track the wall-clock end time so the countdown stays accurate
+      // even when the browser throttles timers in background tabs
+      const state = useTimerStore.getState();
+      if (state.targetEndTime === null && state.timeRemaining > 0) {
+        setTargetEndTime(Date.now() + state.timeRemaining * 1000);
       }
-    };
-  }, [isActive, isPaused, timeRemaining]);
+
+      const tick = () => {
+        const endTime = useTimerStore.getState().targetEndTime;
+        if (endTime === null) return;
+        const remaining = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
+        setTimeRemaining(remaining);
+
+        // Handle session completion inside the tick to avoid
+        // tearing down and recreating the interval every second
+        if (remaining === 0) {
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+          handleSessionComplete();
+        }
+      };
+
+      intervalRef.current = setInterval(tick, 1000);
+
+      // Recalculate immediately when the tab becomes visible again
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          tick();
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+
+      return () => {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+        }
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
+    } else {
+      setTargetEndTime(null);
+
+      return () => {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+        }
+      };
+    }
+  }, [isActive, isPaused]);
 
   const handleSessionComplete = async () => {
     pauseTimer();
@@ -104,10 +157,24 @@ export const useTimer = () => {
 
     const supabase = createClient();
 
+    // Play notification sound if enabled
+    try {
+      const { data: soundSettings } = await supabase
+        .from('user_settings')
+        .select('sound_enabled')
+        .single();
+      if (soundSettings?.sound_enabled !== false) {
+        playNotificationSound();
+      }
+    } catch {
+      // Default to playing if we can't check settings
+      playNotificationSound();
+    }
+
     // Complete the current session in the database
-    if (currentSessionIdRef.current) {
+    if (currentSessionId) {
       try {
-        await queries.completeSession(supabase, currentSessionIdRef.current);
+        await queries.completeSession(supabase, currentSessionId);
 
         // If it was a work session and had a task, increment pomodoro count
         if (isWorkSession && currentTaskId) {
@@ -127,7 +194,7 @@ export const useTimer = () => {
       } catch (error) {
         console.error('Error completing session:', error);
       }
-      currentSessionIdRef.current = null;
+      setCurrentSessionId(null);
       sessionStartRef.current = null;
     }
 
@@ -154,6 +221,7 @@ export const useTimer = () => {
           const workDuration = settings?.work_duration ? settings.work_duration * 60 : 25 * 60;
           setSessionType('work');
           setTimeRemaining(workDuration);
+          setSessionDuration(workDuration);
         }
       }
     } catch (error) {
@@ -189,6 +257,7 @@ export const useTimer = () => {
 
       setSessionType(sessionType);
       setTimeRemaining(duration);
+      setSessionDuration(duration);
 
       // Create new session record
       try {
@@ -203,7 +272,7 @@ export const useTimer = () => {
             break_skipped: false,
           });
 
-          currentSessionIdRef.current = session.id;
+          setCurrentSessionId(session.id);
           sessionStartRef.current = new Date();
         }
       } catch (error) {
@@ -217,16 +286,16 @@ export const useTimer = () => {
   const skipBreak = async () => {
     const supabase = createClient();
 
-    if (currentSessionIdRef.current) {
+    if (currentSessionId) {
       try {
-        await queries.updateSession(supabase, currentSessionIdRef.current, {
+        await queries.updateSession(supabase, currentSessionId, {
           break_skipped: true,
           break_taken: false,
         });
       } catch (error) {
         console.error('Error skipping break:', error);
       }
-      currentSessionIdRef.current = null;
+      setCurrentSessionId(null);
       sessionStartRef.current = null;
     }
 
@@ -239,15 +308,15 @@ export const useTimer = () => {
 
     const supabase = createClient();
 
-    if (currentSessionIdRef.current) {
+    if (currentSessionId) {
       try {
-        await queries.updateSession(supabase, currentSessionIdRef.current, {
+        await queries.updateSession(supabase, currentSessionId, {
           cancelled_at: new Date().toISOString(),
         });
       } catch (error) {
         console.error('Error cancelling session:', error);
       }
-      currentSessionIdRef.current = null;
+      setCurrentSessionId(null);
       sessionStartRef.current = null;
     }
   };
@@ -264,22 +333,7 @@ export const useTimer = () => {
   };
 
   const getProgressPercentage = () => {
-    const supabase = createClient();
-
-    let totalDuration = 25 * 60;
-    switch (currentSession) {
-      case 'work':
-        totalDuration = 25 * 60;
-        break;
-      case 'short_break':
-        totalDuration = 5 * 60;
-        break;
-      case 'long_break':
-        totalDuration = 15 * 60;
-        break;
-    }
-
-    return ((totalDuration - timeRemaining) / totalDuration) * 100;
+    return ((sessionDuration - timeRemaining) / sessionDuration) * 100;
   };
 
   return {
@@ -289,6 +343,8 @@ export const useTimer = () => {
     currentSession,
     completedSessions,
     currentTaskId,
+    targetEndTime,
+    sessionDuration,
     startSession,
     pauseTimer,
     handleReset,

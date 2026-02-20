@@ -1,19 +1,33 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
+
+const RADIUS = 170;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 interface TimerDisplayProps {
   timeRemaining: number;
   currentSession: 'work' | 'short_break' | 'long_break';
   progress: number;
+  targetEndTime: number | null;
+  sessionDuration: number;
+  onTimeClick?: () => void;
+  isClickable?: boolean;
 }
 
 export const TimerDisplay: React.FC<TimerDisplayProps> = ({
   timeRemaining,
   currentSession,
   progress,
+  targetEndTime,
+  sessionDuration,
+  onTimeClick,
+  isClickable = false,
 }) => {
+  const circleRef = useRef<SVGCircleElement>(null);
+  const rafRef = useRef<number>(0);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -42,6 +56,33 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({
     }
   };
 
+  // Animate the circle at ~60fps using requestAnimationFrame when the timer is running
+  const animate = useCallback(() => {
+    if (!circleRef.current || !targetEndTime || sessionDuration <= 0) return;
+
+    const now = Date.now();
+    const remainingMs = Math.max(0, targetEndTime - now);
+    const fraction = remainingMs / (sessionDuration * 1000);
+    const offset = CIRCUMFERENCE * (1 - fraction);
+    circleRef.current.setAttribute('stroke-dashoffset', String(offset));
+
+    if (remainingMs > 0) {
+      rafRef.current = requestAnimationFrame(animate);
+    }
+  }, [targetEndTime, sessionDuration]);
+
+  useEffect(() => {
+    if (targetEndTime && sessionDuration > 0) {
+      rafRef.current = requestAnimationFrame(animate);
+      return () => cancelAnimationFrame(rafRef.current);
+    }
+    // When idle/paused, set offset from the prop-based progress
+    if (circleRef.current) {
+      const offset = CIRCUMFERENCE * (progress / 100);
+      circleRef.current.setAttribute('stroke-dashoffset', String(offset));
+    }
+  }, [targetEndTime, sessionDuration, animate, progress]);
+
   return (
     <div className="flex flex-col items-center justify-center space-y-3 sm:space-y-6">
       <div className="text-2xl font-bold text-gray-700">
@@ -60,23 +101,38 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({
             className="text-gray-200"
           />
           <circle
+            ref={circleRef}
             cx="192"
             cy="192"
             r="170"
             stroke="currentColor"
             strokeWidth="14"
             fill="transparent"
-            strokeDasharray={`${2 * Math.PI * 170}`}
-            strokeDashoffset={`${2 * Math.PI * 170 * (progress / 100)}`}
+            strokeDasharray={`${CIRCUMFERENCE}`}
+            strokeDashoffset={`${CIRCUMFERENCE * (progress / 100)}`}
             strokeLinecap="butt"
-            className={cn('transition-all duration-1000', getSessionColor())}
+            className={cn(getSessionColor())}
           />
         </svg>
 
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-4xl sm:text-6xl md:text-8xl font-bold font-pixel-body text-gray-900">
+        <div
+          className={cn(
+            'absolute inset-0 flex flex-col items-center justify-center',
+            isClickable && 'cursor-pointer group'
+          )}
+          onClick={isClickable ? onTimeClick : undefined}
+        >
+          <span className={cn(
+            'text-4xl sm:text-6xl md:text-8xl font-bold font-pixel-body text-gray-900',
+            isClickable && 'group-hover:text-primary transition-colors'
+          )}>
             {formatTime(timeRemaining)}
           </span>
+          {isClickable && (
+            <span className="text-xs text-gray-400 mt-1 group-hover:text-primary transition-colors">
+              tap to adjust
+            </span>
+          )}
         </div>
       </div>
     </div>

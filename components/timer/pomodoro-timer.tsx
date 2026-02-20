@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw } from 'lucide-react';
+import { Play, Pause, RotateCcw, X } from 'lucide-react';
 import { TimerDisplay } from './timer-display';
 import { BreakPrompt } from './break-prompt';
 import { PixelButton } from '@/components/ui/pixel-button';
@@ -9,6 +9,7 @@ import { PixelCard } from '@/components/ui/pixel-card';
 import { useTimer } from '@/lib/hooks/use-timer';
 import { useTasks } from '@/lib/hooks/use-tasks';
 import { SessionType } from '@/types';
+import { createClient } from '@/lib/supabase/client';
 
 export const PomodoroTimer: React.FC = () => {
   const {
@@ -18,6 +19,8 @@ export const PomodoroTimer: React.FC = () => {
     currentSession,
     completedSessions,
     currentTaskId,
+    targetEndTime,
+    sessionDuration,
     startSession,
     pauseTimer,
     handleReset,
@@ -31,21 +34,37 @@ export const PomodoroTimer: React.FC = () => {
   const { tasks, refetch } = useTasks();
   const [showBreakPrompt, setShowBreakPrompt] = useState(false);
   const [nextSessionType, setNextSessionType] = useState<'short_break' | 'long_break'>('short_break');
+  const [showDurationEditor, setShowDurationEditor] = useState(false);
+
+  // Duration editor state (in minutes)
+  const [editWork, setEditWork] = useState(25);
+  const [editShortBreak, setEditShortBreak] = useState(5);
+  const [editLongBreak, setEditLongBreak] = useState(15);
+  const [savingDurations, setSavingDurations] = useState(false);
 
   // Get user settings
   const [sessionsUntilLongBreak, setSessionsUntilLongBreak] = useState(4);
 
+  // Clamp a numeric input string to a valid minute range
+  const parseMinutes = (raw: string, min: number, max: number): number => {
+    const stripped = raw.replace(/[^0-9]/g, '');
+    if (stripped === '') return min;
+    return Math.max(min, Math.min(max, Number(stripped)));
+  };
+
   useEffect(() => {
     const loadSettings = async () => {
-      const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
       const { data: settings } = await supabase
         .from('user_settings')
-        .select('sessions_until_long_break')
+        .select('*')
         .single();
 
       if (settings) {
         setSessionsUntilLongBreak(settings.sessions_until_long_break);
+        setEditWork(settings.work_duration);
+        setEditShortBreak(settings.short_break_duration);
+        setEditLongBreak(settings.long_break_duration);
       }
     };
     loadSettings();
@@ -95,6 +114,48 @@ export const PomodoroTimer: React.FC = () => {
     }
   };
 
+  const timerIsIdle = !isActive && !isPaused;
+
+  const handleTimeClick = () => {
+    if (timerIsIdle) {
+      setShowDurationEditor(true);
+    }
+  };
+
+  const handleSaveDurations = async () => {
+    setSavingDurations(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('user_settings')
+          .update({
+            work_duration: editWork,
+            short_break_duration: editShortBreak,
+            long_break_duration: editLongBreak,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user.id);
+
+        // Update the current timer display to reflect the new duration
+        const { useTimerStore } = await import('@/lib/stores/timer-store');
+        const durationMap: Record<string, number> = {
+          work: editWork * 60,
+          short_break: editShortBreak * 60,
+          long_break: editLongBreak * 60,
+        };
+        useTimerStore.getState().setTimeRemaining(durationMap[currentSession]);
+        useTimerStore.getState().setSessionDuration(durationMap[currentSession]);
+      }
+    } catch (error) {
+      console.error('Error saving durations:', error);
+    } finally {
+      setSavingDurations(false);
+      setShowDurationEditor(false);
+    }
+  };
+
   const currentTask = tasks.find((t) => t.id === currentTaskId);
 
   return (
@@ -114,7 +175,74 @@ export const PomodoroTimer: React.FC = () => {
             timeRemaining={timeRemaining}
             currentSession={currentSession}
             progress={getProgressPercentage()}
+            targetEndTime={targetEndTime}
+            sessionDuration={sessionDuration}
+            onTimeClick={handleTimeClick}
+            isClickable={timerIsIdle}
           />
+
+          {/* Duration Editor Panel — numeric inputs */}
+          {showDurationEditor && (
+            <div className="border-2 border-gray-800 pixel-rounded p-4 bg-white space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-gray-900 uppercase">Adjust Durations</h3>
+                <button
+                  onClick={() => setShowDurationEditor(false)}
+                  className="p-1 text-gray-500 hover:text-gray-900 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                {([
+                  { label: 'Focus', value: editWork, setValue: setEditWork, min: 1, max: 120 },
+                  { label: 'Short Break', value: editShortBreak, setValue: setEditShortBreak, min: 1, max: 60 },
+                  { label: 'Long Break', value: editLongBreak, setValue: setEditLongBreak, min: 1, max: 60 },
+                ] as const).map((row) => (
+                  <div key={row.label} className="space-y-2">
+                    <label className="block text-xs font-semibold text-gray-600 text-center uppercase">
+                      {row.label}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={row.value}
+                        onChange={(e) => {
+                          const stripped = e.target.value.replace(/[^0-9]/g, '');
+                          if (stripped === '') {
+                            row.setValue(0 as any);
+                            return;
+                          }
+                          const num = Math.min(row.max, Number(stripped));
+                          row.setValue(num);
+                        }}
+                        onBlur={(e) => {
+                          row.setValue(parseMinutes(e.target.value, row.min, row.max));
+                        }}
+                        className="w-full text-center text-2xl font-bold text-gray-900 border-2 border-gray-300 pixel-rounded py-3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
+                      />
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+                        min
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <PixelButton
+                onClick={handleSaveDurations}
+                variant="primary"
+                size="sm"
+                className="w-full"
+                disabled={savingDurations}
+              >
+                {savingDurations ? 'Saving...' : 'Save'}
+              </PixelButton>
+            </div>
+          )}
 
           <div className="text-center space-y-2">
             <span className="text-sm text-gray-600 block">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, ChevronUp, ChevronDown, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -10,6 +10,7 @@ import { useTasks } from '@/lib/hooks/use-tasks';
 export const FloatingTimer: React.FC = () => {
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(true);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
     isActive,
@@ -17,12 +18,54 @@ export const FloatingTimer: React.FC = () => {
     timeRemaining,
     currentSession,
     currentTaskId,
+    targetEndTime,
     startTimer,
     pauseTimer,
+    setTimeRemaining,
   } = useTimerStore();
 
   const { tasks } = useTasks();
   const currentTask = tasks.find((t) => t.id === currentTaskId);
+
+  // Keep the displayed time in sync with the wall-clock target when the
+  // main useTimer hook is not mounted (i.e. user is on a sub-page)
+  useEffect(() => {
+    if (pathname === '/dashboard') return; // useTimer handles it on dashboard
+
+    if (isActive && !isPaused && targetEndTime) {
+      const tick = () => {
+        const endTime = useTimerStore.getState().targetEndTime;
+        if (endTime === null) return;
+        const remaining = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
+        useTimerStore.getState().setTimeRemaining(remaining);
+      };
+
+      // Sync immediately
+      tick();
+
+      intervalRef.current = setInterval(tick, 1000);
+
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          tick();
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+
+      return () => {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+        }
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [pathname, isActive, isPaused, targetEndTime]);
 
   // Only show on sub-pages, not on the main dashboard
   if (pathname === '/dashboard') {

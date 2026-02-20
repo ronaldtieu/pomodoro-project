@@ -15,6 +15,15 @@ export const CategoryChart: React.FC<CategoryChartProps> = ({ analytics }) => {
   const [isMobile, setIsMobile] = React.useState(false);
   const [period, setPeriod] = React.useState<TimePeriod>('overall');
 
+  const formatTime = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
+
   React.useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
     check();
@@ -97,7 +106,7 @@ export const CategoryChart: React.FC<CategoryChartProps> = ({ analytics }) => {
                         border: '2px solid #1f2937',
                         borderRadius: '8px',
                       }}
-                      formatter={(value: number) => [`${value} min`, 'Focus Time']}
+                      formatter={(value: number) => [formatTime(value), 'Focus Time']}
                     />
                     <Legend />
                   </PieChart>
@@ -106,7 +115,7 @@ export const CategoryChart: React.FC<CategoryChartProps> = ({ analytics }) => {
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-gray-900">
-                {totalFocusTime} min
+                {formatTime(totalFocusTime)}
               </div>
               <div className="text-sm text-gray-600">Total categorized focus time</div>
             </div>
